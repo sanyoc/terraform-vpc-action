@@ -3,9 +3,7 @@ name: 'Terraform-Apply'
 on:
   push:
     branches:
-      - main
-      - dev
-      - qa
+      - '**'
   pull_request:
 
   workflow_dispatch:
