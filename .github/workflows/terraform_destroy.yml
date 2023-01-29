@@ -1,0 +1,66 @@
+name: 'Terraform-Destroy'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    name: 'Terraform-Destroy'
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.1.9
+
+    - uses: DamianReeves/write-file-action@master
+      with:
+        path: backend.tf
+        contents: |
+          terraform {
+            backend "s3" {
+              bucket = "${{ secrets.BUCKET_NAME }}"
+              key    = "state/terraform.tfstate"
+              region = "us-east-1"
+            }
+          }
+        write-mode: overwrite
+
+    - name: List Contents
+      run: |
+        ls -R
+
+    - name: Debug
+      run: echo "$GITHUB_REF"
+
+    - name: Terraform Destroy Dev
+      if: github.ref == 'refs/heads/dev'
+      run: make destroy_dev
+      env:
+        TF_VAR_environment: "dev"
+        TF_VAR_region: "us-east-1"
+
+    - name: Terraform Destroy QA
+      if: github.ref == 'refs/heads/qa'
+      run: make destroy_qa
+      env:
+        TF_VAR_environment: "qa"
+        TF_VAR_region: "us-east-2"
+        
+    - name: Terraform Destroy Prod
+      if: github.ref == 'refs/heads/main'
+      run: make destroy_prod
+      env:
+        TF_VAR_environment: "prod"
+        TF_VAR_region: "us-west-2"
