@@ -41,10 +41,9 @@ jobs:
           }
         write-mode: overwrite
 
-    - name: Verify Backend.tf
+    - name: List Contents
       run: |
         ls -R
-        cat backend.tf
 
     - name: Debug
       run: echo "$GITHUB_REF"
@@ -64,7 +63,7 @@ jobs:
         TF_VAR_region: "us-east-2"
         
     - name: Terraform Apply Prod
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/main'
       run: make prod
       env:
         TF_VAR_environment: "prod"
